@@ -60,7 +60,7 @@ router.get('/folio/:folio', async (req, res) => {
 // ===================================
 
 async function generarFolio() {
-  const prefijo = "CBTIS272-";
+  const prefijo = "CBTIS214-";
 
   const ultimo = await Alumno.findOne({
     folio: { $regex: `^${prefijo}` }
