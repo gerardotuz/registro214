@@ -27,7 +27,7 @@ const app = express();
 
 // CORS
 const corsOptions = {
-  origin: 'https://registro272.onrender.com',
+  origin: 'https://registro214.onrender.com',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
 };
