@@ -1,20 +1,14 @@
 // backend/routers/alumno.js
 const express = require('express');
 const router = express.Router();
-
+const Alumno = require('../models/Alumno');
+const mongoose = require('mongoose');
 const multer = require('multer');
 const xlsx = require('xlsx');
 const generarPDF = require('../utils/pdfGenerator');
 const flattenToNested = require('../utils/flattenToNested');
 const path = require('path');
 const fs = require('fs');
-const { conexiones } = require('../server');
-const AlumnoSchema = require('../models/Alumno').schema;
-
-// 🔥 FORZAR CONEXIÓN DEL 214
-const Alumno = conexiones.registro214.model("Alumno", AlumnoSchema);
-
-
 
 router.get('/ping', (req, res) => {
   res.status(200).json({ ok: true });
@@ -310,28 +304,46 @@ router.get('/curp/:curp', async (req, res) => {
 
 async function curpExisteEnOtroPlantel(curpActual) {
 
-  for (const key in conexiones) {
+  const bases = [
+    "registro272",
+    "registro28",
+    "registro253",
+    "registro301",
+    "registro309",
+    "registro72",
+    "registro111"
+  ];
 
-    if (key === "registro214") continue;
+  for (const dbName of bases) {
 
-    const AlumnoModel = conexiones[key].model("Alumno", AlumnoSchema);
+    try {
+      const conn = await mongoose.createConnection(
+        process.env[`MONGO_URI_${dbName.replace("registro", "")}`]
+      );
 
-    const alumno = await AlumnoModel.findOne({
-      "datos_alumno.curp": curpActual
-    }).lean();
+      const AlumnoTemp = conn.model("Alumno", Alumno.schema);
 
-    if (alumno) {
-      return {
-        existe: true,
-        plantel: key,
-        folio: alumno.folio
-      };
+      const alumno = await AlumnoTemp.findOne({
+        "datos_alumno.curp": curpActual
+      }).lean();
+
+      await conn.close();
+
+      if (alumno) {
+        return {
+          existe: true,
+          plantel: dbName,
+          folio: alumno.folio
+        };
+      }
+
+    } catch (err) {
+      console.log("Error revisando:", dbName);
     }
   }
 
   return { existe: false };
 }
-
 
 
 
