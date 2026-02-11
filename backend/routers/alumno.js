@@ -1,7 +1,7 @@
 // backend/routers/alumno.js
 const express = require('express');
 const router = express.Router();
-const Alumno = require('../models/Alumno');
+
 const multer = require('multer');
 const xlsx = require('xlsx');
 const generarPDF = require('../utils/pdfGenerator');
@@ -10,6 +10,10 @@ const path = require('path');
 const fs = require('fs');
 const { conexiones } = require('../server');
 const AlumnoSchema = require('../models/Alumno').schema;
+
+// 🔥 FORZAR CONEXIÓN DEL 214
+const Alumno = conexiones.registro214.model("Alumno", AlumnoSchema);
+
 
 
 router.get('/ping', (req, res) => {
@@ -308,6 +312,8 @@ async function curpExisteEnOtroPlantel(curpActual) {
 
   for (const key in conexiones) {
 
+    if (key === "registro214") continue;
+
     const AlumnoModel = conexiones[key].model("Alumno", AlumnoSchema);
 
     const alumno = await AlumnoModel.findOne({
@@ -325,6 +331,7 @@ async function curpExisteEnOtroPlantel(curpActual) {
 
   return { existe: false };
 }
+
 
 
 
