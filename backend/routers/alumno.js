@@ -291,6 +291,31 @@ router.get('/curp/:curp', async (req, res) => {
   }
 });
 
+// ============================================
+// VALIDAR CURP GLOBAL ENTRE PLANTELES
+// ============================================
+
+async function curpExisteEnOtroPlantel(curpActual) {
+
+  for (const key in conexiones) {
+
+    const AlumnoModel = conexiones[key].model("Alumno", AlumnoSchema);
+
+    const alumno = await AlumnoModel.findOne({
+      "datos_alumno.curp": curpActual
+    }).lean();
+
+    if (alumno) {
+      return {
+        existe: true,
+        plantel: key,
+        folio: alumno.folio
+      };
+    }
+  }
+
+  return { existe: false };
+}
 
 
 
