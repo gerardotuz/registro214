@@ -84,15 +84,14 @@ router.post('/guardar', async (req, res) => {
     const data = req.body;
 
     // 🚫 PREVENIR DOBLE REGISTRO POR CURP
-    const existe = await Alumno.findOne({
-      "datos_alumno.curp": data.datos_alumno?.curp
-    });
+   const resultado = await curpExisteEnOtroPlantel(curp);
 
-    if (existe?.registro_completado) {
-      return res.status(400).json({
-        message: "Este alumno ya completó su registro"
-      });
-    }
+if (resultado.existe) {
+  return res.status(400).json({
+    error: `La CURP ya está registrada en el plantel ${resultado.plantel} con folio ${resultado.folio}`
+  });
+}
+
 
     // 🎓 GENERAR FOLIO AQUÍ (SOLO UNA VEZ)
     const folio = await generarFolio();
