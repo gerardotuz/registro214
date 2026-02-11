@@ -8,6 +8,9 @@ const generarPDF = require('../utils/pdfGenerator');
 const flattenToNested = require('../utils/flattenToNested');
 const path = require('path');
 const fs = require('fs');
+const { conexiones } = require('../server');
+const AlumnoSchema = require('../models/Alumno').schema;
+
 
 router.get('/ping', (req, res) => {
   res.status(200).json({ ok: true });
@@ -83,27 +86,33 @@ router.post('/guardar', async (req, res) => {
   try {
     const data = req.body;
 
-    // 🚫 PREVENIR DOBLE REGISTRO POR CURP
-   const resultado = await curpExisteEnOtroPlantel(curp);
+    // 🔹 EXTRAER CURP CORRECTAMENTE
+    const curp = data?.datos_alumno?.curp?.toUpperCase();
 
-if (resultado.existe) {
-  return res.status(400).json({
-    error: `La CURP ya está registrada en el plantel ${resultado.plantel} con folio ${resultado.folio}`
-  });
-}
+    if (!curp) {
+      return res.status(400).json({
+        error: "CURP no proporcionada"
+      });
+    }
 
+    // 🚫 VALIDAR CURP GLOBAL
+    const resultado = await curpExisteEnOtroPlantel(curp);
 
-    // 🎓 GENERAR FOLIO AQUÍ (SOLO UNA VEZ)
+    if (resultado.existe) {
+      return res.status(400).json({
+        error: `La CURP ya está registrada en el plantel ${resultado.plantel} con folio ${resultado.folio}`
+      });
+    }
+
+    // 🎓 GENERAR FOLIO
     const folio = await generarFolio();
     data.folio = folio;
 
-    // 🔒 MARCAR REGISTRO
     data.registro_completado = true;
     data.bloqueado = true;
 
     const actualizado = await Alumno.create(data);
 
-    // 📄 GENERAR PDF
     const datosAnidados = flattenToNested(actualizado.toObject());
     const nombreArchivo = `${folio}.pdf`;
     const pdfUrl = await generarPDF(datosAnidados, nombreArchivo);
@@ -119,6 +128,7 @@ if (resultado.existe) {
     res.status(500).json({ message: err.message });
   }
 });
+
 
 
 
