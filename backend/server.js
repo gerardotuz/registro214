@@ -51,6 +51,42 @@ mongoose.connect(process.env.MONGO_URI, {
 .then(() => console.log('✅ Conectado a MongoDB Atlas'))
 .catch(err => console.error('❌ Error en la conexión', err));
 
+
+
+
+
+
+// ============================================
+// CONEXIONES MULTIPLES A LAS 8 BASES
+// ============================================
+
+const conexiones = {
+  registro272: mongoose.createConnection(process.env.MONGO_URI_272),
+  registro214: mongoose.createConnection(process.env.MONGO_URI_214),
+  registro253: mongoose.createConnection(process.env.MONGO_URI_253),
+  registro301: mongoose.createConnection(process.env.MONGO_URI_301),
+  registro309: mongoose.createConnection(process.env.MONGO_URI_309),
+  registro72: mongoose.createConnection(process.env.MONGO_URI_72),
+  registro28: mongoose.createConnection(process.env.MONGO_URI_28),
+  registro111: mongoose.createConnection(process.env.MONGO_URI_111),
+};
+
+Object.entries(conexiones).forEach(([key, conn]) => {
+  conn.on("connected", () => {
+    console.log(`✅ Conectado a ${key}`);
+  });
+
+  conn.on("error", (err) => {
+    console.error(`❌ Error en conexión ${key}:`, err.message);
+  });
+});
+
+module.exports.conexiones = conexiones;
+
+
+
+
+
 /* =========================
    RUTAS API EXISTENTES
 ========================= */
